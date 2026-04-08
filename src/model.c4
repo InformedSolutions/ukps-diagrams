@@ -1,0 +1,164 @@
+model {
+
+  pharma_company = actor 'Pharmaceutical Company' {
+    description 'Submits and manages pharmaceutical pipeline data.'
+  }
+
+  horizon_scanner = actor 'Horizon Scanner' {
+    description 'Browses submissions and consumes reports for horizon scanning.'
+  }
+
+  strategic_org = actor 'Strategic Organisation' {
+    description 'Consumes reports and other published outputs.'
+  }
+
+  content_manager = actor 'Content Manager' {
+    description 'Maintains the public-facing website content through the CMS.'
+  }
+
+  qa_user = actor 'QA' {
+    description 'NICE QA users who review and quality-assure submissions as part of the publishing flow.'
+  }
+
+  ukps = system 'UK PharmaScan (UKPS)' {
+    icon ../assets/logos/ukps.svg
+    description '''
+      Web-based platform for collecting, managing, and distributing
+      pharmaceutical pipeline data across UK healthcare stakeholders.
+
+    '''
+
+    frontend = webapp 'Frontend' {
+      icon ../assets/logos/nextjs.svg
+      technology 'Next.js on ECS Fargate'
+      description '''
+        Public website and authenticated user interface.
+        Handles SSR/CSR rendering and calls backend endpoints
+        for authentication and UKPS business APIs.
+
+      '''
+    }
+
+    backend_api = service 'Backend API' {
+      icon ../assets/logos/dotnet.svg
+      technology '.NET modular monolith on ECS Fargate'
+      description '''
+        Central application backend for business rules, validation,
+        submission workflows, reporting, and access control.
+
+      '''
+
+      submissions = component 'Record Management Module' {
+        description 'Manages submission records, updates, and QA checks across the publishing flow.'
+      }
+
+      reporting = component 'Reporting Module' {
+        description 'Produces browseable reporting data and generated outputs.'
+      }
+
+      auth = component 'Auth Module' {
+        description 'Handles login and token exchange with Cognito, validates tokens, and enforces authenticated access rules.'
+      }
+    }
+
+    cms = service 'Payload CMS' {
+      icon ../assets/logos/payload.svg
+      technology 'Payload CMS / Node.js'
+      description '''
+        Headless CMS used for static content management and the
+        content manager admin interface.
+
+      '''
+    }
+
+    app_db = database 'UKPS Application Database' {
+      icon ../assets/logos/aws-rds.svg
+      technology 'Amazon Aurora PostgreSQL'
+      description 'Stores submissions, domain data, and reporting data.'
+    }
+
+    cms_db = database 'CMS Database' {
+      icon ../assets/logos/aws-rds.svg
+      technology 'Amazon Aurora PostgreSQL'
+      description 'Stores public site content, CMS metadata, and admin state.'
+    }
+
+    documents = object-storage 'Document and Media Store' {
+      icon ../assets/logos/aws-s3.svg
+      technology 'Amazon S3'
+      description 'Stores uploaded documents, generated PDFs, images, and media assets.'
+    }
+
+    frontend -> backend_api 'reads and writes UKPS business data'
+    frontend -> cms 'retrieves public content'
+    frontend -> documents 'retrieves documents and media'
+
+    backend_api -> app_db 'stores and queries primary application data'
+    backend_api -> documents 'stores generated documents and exports'
+
+    cms -> cms_db 'reads and writes content'
+    cms -> documents 'stores media assets'
+
+    submissions -> app_db 'stores submission data'
+    reporting -> app_db 'reads reporting data'
+    reporting -> documents 'publishes reports and exports'
+  }
+
+  cognito = external-system 'Amazon Cognito' {
+    icon ../assets/logos/aws-cognito.svg
+    technology 'AWS Cognito'
+    description 'Provides user pools, login flows, and JWT token issuance.'
+  }
+
+  sqs = external-system 'Amazon SQS' {
+    icon ../assets/logos/aws-sqs.svg
+    technology 'AWS SQS'
+    description 'Optional asynchronous processing channel for background jobs and integrations.'
+  }
+
+  lambda = external-system 'AWS Lambda' {
+    icon ../assets/logos/aws-lambda.svg
+    technology 'AWS Lambda'
+    description 'Optional event-driven compute for report generation and lightweight integrations.'
+  }
+
+  ses = external-system 'Amazon SES' {
+    icon ../assets/logos/aws-ses.svg
+    technology 'AWS Simple Email Service'
+    description 'Managed outbound email service used by UKPS to send system emails.'
+  }
+
+  observability = external-system 'CloudWatch and CloudTrail' {
+    icon ../assets/logos/aws-cloudwatch.svg
+    technology 'AWS Observability'
+    description 'Centralised logs, metrics, alarms, and audit trails.'
+  }
+
+  aws_services = external-system 'AWS Services' {
+    icon ../assets/logos/aws-fargate.svg
+    technology 'Cognito, SQS, Lambda, CloudWatch, CloudTrail'
+    description 'Aggregate representation of supporting AWS managed services used by UKPS.'
+  }
+
+  pharma_company -> ukps.frontend 'submits and manages pipeline data'
+  horizon_scanner -> ukps.frontend 'browses submissions and reports'
+  strategic_org -> ukps.frontend 'views published reports'
+  content_manager -> ukps.cms 'manages public content via admin UI'
+  qa_user -> ukps.frontend 'reviews and QA checks submissions during publishing'
+
+  ukps.frontend -> ukps.backend_api 'calls auth endpoints and business APIs'
+  ukps.backend_api -> cognito 'validates JWTs and resolves identities'
+  ukps.backend_api.auth -> cognito 'performs token exchange and identity validation'
+  ukps.backend_api -> ses 'sends system emails'
+
+  ukps.backend_api -> sqs 'publishes async jobs when needed'
+  sqs -> lambda 'triggers event-driven processing'
+
+  ukps.frontend -> observability 'emits logs and metrics'
+  ukps.backend_api -> observability 'emits logs, metrics, and alarms'
+  ukps.cms -> observability 'emits logs and metrics'
+
+  ukps.frontend -> aws_services 'uses supporting AWS services'
+  ukps.backend_api -> aws_services 'uses supporting AWS services'
+  ukps.cms -> aws_services 'uses supporting AWS services'
+}

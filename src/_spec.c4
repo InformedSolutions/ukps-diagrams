@@ -1,0 +1,59 @@
+specification {
+
+  element actor {
+    style {
+      shape person
+      color green
+    }
+  }
+
+  element system {
+    notation 'Software System'
+    style {
+      opacity 20%
+    }
+  }
+
+  element external-system {
+    notation 'External Software System'
+    style {
+      opacity 20%
+      color muted
+    }
+  }
+
+  element webapp {
+    notation 'Container: Web Application'
+    style {
+      shape browser
+    }
+  }
+
+  element service {
+    notation 'Container: Service'
+  }
+
+  element database {
+    notation 'Container: Database'
+    style {
+      shape storage
+      opacity 30%
+    }
+  }
+
+  element object-storage {
+    notation 'Container: Object Storage'
+    style {
+      shape storage
+      color amber
+      opacity 30%
+    }
+  }
+
+  element component {
+    notation 'Component'
+    style {
+      opacity 20%
+    }
+  }
+}

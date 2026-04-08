@@ -1,0 +1,90 @@
+views {
+
+  view index {
+    title 'UK PharmaScan System Context'
+    description '''
+      Level 1 context view showing the main UKPS user groups and
+      the AWS/Cognito systems around the platform.
+
+    '''
+
+    include
+      pharma_company,
+      horizon_scanner,
+      strategic_org,
+      content_manager,
+      qa_user,
+      ukps
+
+    style ukps {
+      size large
+      color blue
+    }
+  }
+
+  view containers of ukps {
+    title 'UK PharmaScan Container View'
+    description '''
+      Level 2 container view focused on the Next.js frontend,
+      .NET backend, Payload CMS, data stores, and supporting AWS services.
+
+    '''
+
+    include
+      *,
+      pharma_company,
+      horizon_scanner,
+      strategic_org,
+      content_manager,
+      qa_user,
+      aws_services
+
+    exclude
+      backend_api.*,
+      cognito,
+      sqs,
+      lambda,
+      observability
+
+    style ukps {
+      opacity 0%
+    }
+
+    style app_db, cms_db, documents {
+      multiple true
+    }
+
+    style aws_services {
+      color muted
+    }
+  }
+
+  view backend of ukps.backend_api {
+    title 'UK PharmaScan Backend API Components'
+    description '''
+      Optional Level 3 refinement of the modular monolith,
+      highlighting the main backend responsibility areas.
+
+    '''
+
+    include
+      *,
+      ukps.frontend,
+      ukps.app_db,
+      ukps.documents,
+      cognito,
+      ses,
+      sqs,
+      lambda
+
+    style * {
+      color secondary
+      opacity 10%
+    }
+
+    style backend_api._ {
+      color green
+      opacity 100%
+    }
+  }
+}

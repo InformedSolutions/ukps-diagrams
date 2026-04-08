@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" role="img" aria-labelledby="title desc">
+  <title id="title">UK PharmaScan</title>
+  <desc id="desc">Simplified UK PharmaScan wordmark recreated from the official information leaflet cover.</desc>
+  <g fill="#2ea1d6">
+    <rect width="420" height="96" rx="16" fill="none"/>
+    <circle cx="34" cy="48" r="18" fill="#ffffff"/>
+    <circle cx="50" cy="48" r="18" fill="#2ea1d6" opacity="0.9"/>
+    <circle cx="66" cy="48" r="18" fill="#ffffff"/>
+    <circle cx="82" cy="48" r="18" fill="#2ea1d6" opacity="0.9"/>
+  </g>
+  <text x="118" y="61" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" font-style="italic" fill="#2ea1d6">
+    UK PharmaScan
+  </text>
+</svg>
