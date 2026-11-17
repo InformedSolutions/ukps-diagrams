@@ -49,7 +49,7 @@ model {
       '''
 
       submissions = component 'Record Management Module' {
-        description 'Manages submission records, updates, and QA checks across the publishing flow.'
+        description 'Manages submission records, revisions, form pages, and QA checks across the publishing flow.'
       }
 
       reporting = component 'Reporting Module' {
@@ -57,13 +57,23 @@ model {
       }
 
       auth = component 'Auth Module' {
-        description 'Handles login and token exchange with Cognito, validates tokens, and enforces authenticated access rules.'
+        description 'Handles login and token exchange with Cognito, validates tokens, and enforces organisation-scoped access rules.'
       }
+
+      notifications = component 'Notifications Module' {
+        description 'Queues system emails and sends them asynchronously through SES.'
+      }
+    }
+
+    db_migrator = service 'Database Migrator' {
+      icon ../assets/logos/aws-lambda.svg
+      technology '.NET on AWS Lambda'
+      description 'Applies database schema migrations to the application database during each release.'
     }
 
     cms = service 'Payload CMS' {
       icon ../assets/logos/payload.svg
-      technology 'Payload CMS / Node.js'
+      technology 'Payload CMS, embedded in the Next.js frontend'
       description '''
         Headless CMS used for static content management and the
         content manager admin interface.
@@ -96,6 +106,8 @@ model {
     backend_api -> app_db 'stores and queries primary application data'
     backend_api -> documents 'stores generated documents and exports'
 
+    db_migrator -> app_db 'applies schema migrations'
+
     cms -> cms_db 'reads and writes content'
     cms -> documents 'stores media assets'
 
@@ -113,13 +125,7 @@ model {
   sqs = external-system 'Amazon SQS' {
     icon ../assets/logos/aws-sqs.svg
     technology 'AWS SQS'
-    description 'Optional asynchronous processing channel for background jobs and integrations.'
-  }
-
-  lambda = external-system 'AWS Lambda' {
-    icon ../assets/logos/aws-lambda.svg
-    technology 'AWS Lambda'
-    description 'Optional event-driven compute for report generation and lightweight integrations.'
+    description 'Queues system email jobs for asynchronous sending, with a dead-letter queue for failures.'
   }
 
   ses = external-system 'Amazon SES' {
@@ -150,9 +156,8 @@ model {
   ukps.backend_api -> cognito 'validates JWTs and resolves identities'
   ukps.backend_api.auth -> cognito 'performs token exchange and identity validation'
   ukps.backend_api -> ses 'sends system emails'
-
-  ukps.backend_api -> sqs 'publishes async jobs when needed'
-  sqs -> lambda 'triggers event-driven processing'
+  ukps.backend_api.notifications -> sqs 'publishes and consumes email jobs'
+  ukps.backend_api.notifications -> ses 'sends system emails'
 
   ukps.frontend -> observability 'emits logs and metrics'
   ukps.backend_api -> observability 'emits logs, metrics, and alarms'

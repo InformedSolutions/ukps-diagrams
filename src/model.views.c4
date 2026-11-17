@@ -37,13 +37,13 @@ views {
       strategic_org,
       content_manager,
       qa_user,
+      ses,
       aws_services
 
     exclude
       backend_api.*,
       cognito,
       sqs,
-      lambda,
       observability
 
     style ukps {
@@ -74,8 +74,7 @@ views {
       ukps.documents,
       cognito,
       ses,
-      sqs,
-      lambda
+      sqs
 
     style * {
       color secondary
